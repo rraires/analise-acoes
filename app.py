@@ -4,7 +4,7 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 
-st.beta_set_page_config(page_title='Análise Quant Ações', page_icon = favicon, layout = 'wide', initial_sidebar_state = 'auto')
+st.set_page_config(page_title='Análise Quant Ações', page_icon = favicon, layout = 'wide', initial_sidebar_state = 'auto')
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
 stocks_df = pd.DataFrame(stocks_list) #Transforma a lista em DataFrame
 stocks_df.columns = ['Ticker'] #Adiciona o nome da coluna
