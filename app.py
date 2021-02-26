@@ -4,6 +4,7 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 
+st.beta_set_page_config(page_title='Análise Quant Ações', page_icon = favicon, layout = 'wide', initial_sidebar_state = 'auto')
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
 stocks_df = pd.DataFrame(stocks_list) #Transforma a lista em DataFrame
 stocks_df.columns = ['Ticker'] #Adiciona o nome da coluna
@@ -25,11 +26,11 @@ if pressed_calc:
   papel = yf.download(option + '.SA')
   papel = papel.reset_index()
   papel['Retorno'] = papel['Adj Close'].pct_change()
+  papel = papel[:-1]
 
   perc = -(perc_queda/100)
 
   indice = papel[papel["Retorno"] < perc].index
-  indice = indice[:-1]
 
   dia_queda = papel.iloc[indice]
   dia_queda['Retorno'] = (dia_queda['Retorno'])
