@@ -138,3 +138,6 @@ if opcao == 'Análise do Beta da Carteira':
     st.table(portfolio)
     ''
     '**Beta da Carteira:**', beta_portfolio
+    
+st.sidebar.text('Criado por Roberto Martins')
+st.sidebar.text('rraires.dev@gmail.com')
