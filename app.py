@@ -4,12 +4,14 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 import time
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
 st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
-st.sidebar.subheader('Escolha a opção para análise')
+st.sidebar.subheader('Escolha a opção para análise:')
 
 opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira', 'Correlação entre Ações'))
 
@@ -150,6 +152,8 @@ if opcao == 'Correlação entre Ações':
 
   if st.button('Calcular'):
 
+   with st.spinner('Baixando Histórico e Calculando...'):
+
     tickers = [ticker1_sel, ticker2_sel]
     count = 0
     for item in tickers:
@@ -186,6 +190,8 @@ if opcao == 'Correlação entre Ações':
     st.line_chart(correlacao)
     correlacao_ultimo_ano = correlacao.tail(1)[0].round(2)
     'Correlação nos últimos 12 meses:', correlacao_ultimo_ano
+
+   st.success('Pronto!')
 
 
 st.sidebar.text('Criado por Roberto Martins')
