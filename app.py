@@ -4,8 +4,6 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 import time
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
