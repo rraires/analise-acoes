@@ -145,8 +145,8 @@ if opcao == 'Correlação entre Ações':
   stocks_list.extend(indices)
   stocks_list.sort()
 
-  ticker1_sel = st.selectbox('Selecione o Papel 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list)
-  ticker2_sel = st.selectbox('Selecione o Papel 2', stocks_list)
+  ticker1_sel = st.selectbox('Selecione o Papel 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list, index=388)
+  ticker2_sel = st.selectbox('Selecione o Papel 2', stocks_list, index=389)
 
   if st.button('Calcular'):
 
