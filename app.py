@@ -11,7 +11,7 @@ st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', wi
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
-opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira', 'Correlação entre Ações'))
+opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira', 'Correlação entre Ativos'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
@@ -136,17 +136,17 @@ if opcao == 'Análise do Beta da Carteira':
 
 # ************************************************** Correlação entre Ações *****************************************
 
-if opcao == 'Correlação entre Ações':
+if opcao == 'Correlação entre Ativos':
   
-  st.title('Correlação entre Ações')
+  st.title('Correlação entre Ativos')
 
   stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
   indices = ['Indice Bovespa', 'Indice Dolar', 'Indice SP500', 'Indice Dow Jones', 'Indice NASDAQ']
   stocks_list.extend(indices)
   stocks_list.sort()
 
-  ticker1_sel = st.selectbox('Selecione o Papel 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list, index=388)
-  ticker2_sel = st.selectbox('Selecione o Papel 2', stocks_list, index=389)
+  ticker1_sel = st.selectbox('Selecione o Ativo 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list, index=388)
+  ticker2_sel = st.selectbox('Selecione o Ativo 2', stocks_list, index=389)
 
   if st.button('Calcular'):
 
