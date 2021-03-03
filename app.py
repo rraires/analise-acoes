@@ -4,6 +4,8 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 import time
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
@@ -11,12 +13,14 @@ st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', wi
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise')
 
-opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira'))
+opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira', 'Correlação entre Ações'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
 stocks_df = pd.DataFrame(stocks_list) #Transforma a lista em DataFrame
 stocks_df.columns = ['Ticker'] #Adiciona o nome da coluna
+indices = [{'Ticker': 'Indice Bovespa'}, {'Ticker': 'Indice Dolar'},{'Ticker': 'Indice SP500'}, {'Ticker': 'Indice Dow Jones'}, {'Ticker': 'Indice NASDAQ'}]
+stocks_df = stocks_df.append(indices, ignore_index=True)
 stocks_df = stocks_df.sort_values(by='Ticker').reset_index(drop=True) #Ordena por ordem alfabetica e reseta o index
 
 # ************************************************** Análise de Quedas *****************************************
@@ -123,13 +127,6 @@ if opcao == 'Análise do Beta da Carteira':
     portfolio['Valor'] = pd.to_numeric(portfolio['Valor'])
     portfolio['%'] = pd.to_numeric(portfolio['%'])
     portfolio['Beta Pond'] = pd.to_numeric(portfolio['Beta Pond'])
-    #Arredondamento dos Valores
-    #portfolio['Fechamento'] = portfolio['Fechamento'].round(2)
-    #portfolio['Valor'] = portfolio['Valor'].round(2)
-    portfolio['%'] = portfolio['%'].round(2)
-    portfolio['Beta'] = portfolio['Beta'].round(2)
-    portfolio['Beta Pond'] = portfolio['Beta Pond'].round(2)
-    #Calculo Beta Carteira
     beta_portfolio = portfolio['Beta Pond'].sum().round(2)
 
     portfolio = portfolio.style.format({"Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
@@ -138,6 +135,60 @@ if opcao == 'Análise do Beta da Carteira':
     st.table(portfolio)
     ''
     '**Beta da Carteira:**', beta_portfolio
-    
+
+# ************************************************** Correlação entre Ações *****************************************
+
+if opcao == 'Correlação entre Ações':
+  
+  st.title('Correlação entre Ações')
+
+  stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
+  indices = ['Indice Bovespa', 'Indice Dolar', 'Indice SP500', 'Indice Dow Jones', 'Indice NASDAQ']
+  stocks_list.extend(indices)
+  stocks_list.sort()
+
+  ticker1_sel = st.selectbox('Selecione o Papel 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list)
+  ticker2_sel = st.selectbox('Selecione o Papel 2', stocks_list)
+
+  if st.button('Calcular'):
+
+    tickers = [ticker1_sel, ticker2_sel]
+    count = 0
+    for item in tickers:
+      if 'Indice' not in item: 
+        item = item + '.SA'
+      tickers[count] = item
+      count += 1
+
+    if 'Indice Bovespa' in tickers:
+      tickers.remove('Indice Bovespa')
+      tickers.append('^BVSP')
+    if 'Indice Dolar' in tickers:
+      tickers.remove('Indice Dolar')
+      tickers.append('USDBRL=X')
+    if 'Indice SP500' in tickers:
+      tickers.remove('Indice SP500')
+      tickers.append('SPY')
+    if 'Indice Dow Jones' in tickers:
+      tickers.remove('Indice Dow Jones')
+      tickers.append('^DJI')
+    if 'Indice NASDAQ' in tickers:
+      tickers.remove('Indice NASDAQ')
+      tickers.append('^IXIC')
+
+    ticker1 = tickers[0]
+    ticker2 = tickers[1]
+
+    carteira = yf.download(tickers, start="2010-01-01")["Close"]
+    carteira = carteira.dropna()
+    retornos = carteira.pct_change()[1:]
+    correlacao = retornos[ticker2].rolling(252).corr(retornos[ticker1])
+    correlacao = correlacao.dropna()
+    'Correlação entre', ticker1_sel, 'e ', ticker2_sel, 'ao longo do tempo'
+    st.line_chart(correlacao)
+    correlacao_ultimo_ano = correlacao.tail(1)[0].round(2)
+    'Correlação nos últimos 12 meses:', correlacao_ultimo_ano
+
+
 st.sidebar.text('Criado por Roberto Martins')
 st.sidebar.text('rraires.dev@gmail.com')
