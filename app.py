@@ -137,9 +137,9 @@ if opcao == 'Análise do Beta da Carteira':
     ''
     '**Beta da Carteira:**', beta_portfolio
 
-# ************************************************** Correlação entre Ativos Beta*****************************************
+# ************************************************** Correlação entre Ativos *****************************************
 
-if opcao == 'Correlação entre Ativos Beta':   
+if opcao == 'Correlação entre Ativos':   
 
   st.title('Correlação entre Ativos')
 
