@@ -4,7 +4,10 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 import time
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
 st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', width=200, use_column_width=False)
@@ -134,10 +137,10 @@ if opcao == 'Análise do Beta da Carteira':
     ''
     '**Beta da Carteira:**', beta_portfolio
 
-# ************************************************** Correlação entre Ações *****************************************
+# ************************************************** Correlação entre Ativos Beta*****************************************
 
-if opcao == 'Correlação entre Ativos':
-  
+if opcao == 'Correlação entre Ativos Beta':   
+
   st.title('Correlação entre Ativos')
 
   stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
@@ -145,52 +148,80 @@ if opcao == 'Correlação entre Ativos':
   stocks_list.extend(indices)
   stocks_list.sort()
 
-  ticker1_sel = st.selectbox('Selecione o Ativo 1 (Para Indices, digite "Indice.." e busque na lista. Ex.: Indice Bovespa, Indice Dolar, Indice SP500)', stocks_list, index=388)
-  ticker2_sel = st.selectbox('Selecione o Ativo 2', stocks_list, index=389)
+  selecao = st.multiselect('Selecione os Ativos. O 1º Ativo será a referência de comparação com os demais. Para Indices, apenas digitar "Indice..."', stocks_list)
+
+  tickers = selecao[:]
 
   if st.button('Calcular'):
+    with st.spinner('Baixando Histórico e Calculando...'):
+      count = 0
+      for item in tickers:
+          if 'Indice' not in item: 
+            item = item + '.SA'
+          tickers[count] = item
+          count += 1
 
-   with st.spinner('Baixando Histórico e Calculando...'):
+      if 'Indice Bovespa' in tickers:
+        tickers.remove('Indice Bovespa')
+        tickers.append('^BVSP')
+      if 'Indice Dolar' in tickers:
+        tickers.remove('Indice Dolar')
+        tickers.append('USDBRL=X')
+      if 'Indice SP500' in tickers:
+        tickers.remove('Indice SP500')
+        tickers.append('SPY')
+      if 'Indice Dow Jones' in tickers:
+        tickers.remove('Indice Dow Jones')
+        tickers.append('^DJI')
+      if 'Indice NASDAQ' in tickers:
+        tickers.remove('Indice NASDAQ')
+        tickers.append('^IXIC')
+      
+      carteira = yf.download(tickers, start="2010-01-01")["Close"]
+      carteira = carteira.dropna()
 
-    tickers = [ticker1_sel, ticker2_sel]
-    count = 0
-    for item in tickers:
-      if 'Indice' not in item: 
-        item = item + '.SA'
-      tickers[count] = item
-      count += 1
+      retornos = carteira.pct_change()[1:]
 
-    if 'Indice Bovespa' in tickers:
-      tickers.remove('Indice Bovespa')
-      tickers.append('^BVSP')
-    if 'Indice Dolar' in tickers:
-      tickers.remove('Indice Dolar')
-      tickers.append('USDBRL=X')
-    if 'Indice SP500' in tickers:
-      tickers.remove('Indice SP500')
-      tickers.append('SPY')
-    if 'Indice Dow Jones' in tickers:
-      tickers.remove('Indice Dow Jones')
-      tickers.append('^DJI')
-    if 'Indice NASDAQ' in tickers:
-      tickers.remove('Indice NASDAQ')
-      tickers.append('^IXIC')
+      retornos.rename(columns = {'^BVSP': 'Indice Bovespa', 'USDBRL=X': 'Indice Dolar', 'SPY': 'Indice SP500', '^DJI': 'Indice Dow Jones', '^IXIC': 'Indice NASDAQ'}, inplace = True)
+      count = 0
+      for item in retornos.columns:
+        if 'Indice' not in item: 
+          string_a = retornos.columns[count]
+          string_b = string_a[:-3]
+          retornos.columns = retornos.columns.str.replace(string_a, string_b)
+        count += 1
 
-    ticker1 = tickers[0]
-    ticker2 = tickers[1]
+      #count = 1
+      #for i in range(len(tickers)-1):
+      #  correlacao_tempo = retornos[selecao[count]].rolling(252).corr(retornos[selecao[0]])*100
+      #  correlacao_tempo = correlacao_tempo.dropna()
+      #  'Correlação entre ', selecao[0], ' e', selecao[count]
+      #  st.line_chart(correlacao_tempo)
+      #  count += 1
 
-    carteira = yf.download(tickers, start="2010-01-01")["Close"]
-    carteira = carteira.dropna()
-    retornos = carteira.pct_change()[1:]
-    correlacao = retornos[ticker2].rolling(252).corr(retornos[ticker1])
-    correlacao = correlacao.dropna()
-    'Correlação entre', ticker1_sel, 'e ', ticker2_sel, 'ao longo do tempo'
-    st.line_chart(correlacao)
-    correlacao_ultimo_ano = correlacao.tail(1)[0].round(2)
-    'Correlação nos últimos 12 meses:', correlacao_ultimo_ano
+      count = 1
+      for i in range(len(tickers)-1):
+        correlacao_ativo = pd.DataFrame(retornos[selecao[count]].rolling(252).corr(retornos[selecao[0]])*100)
+        correlacao_ativo.columns = [selecao[count]]
+        if count == 1: correlacao_composicao = correlacao_ativo
+        if count != 1: correlacao_composicao = pd.merge(correlacao_composicao, correlacao_ativo, how= 'inner', on = 'Date')
+        count += 1
+      correlacao_composicao = correlacao_composicao.dropna()
+      'Correlação entre **', selecao[0], '**e os demais ativos:'
+      st.line_chart(correlacao_composicao)
 
-   st.success('Pronto!')
+      'HeatMap da correlação entre os ativos nos últimos **12 meses**:'
+      #plt.subplots(figsize=(18,10))
+      sns.heatmap(retornos.tail(255).corr(), annot=True); # HeatMap da correlação entre os Ativos do periodo de 1 ano
+      st.pyplot()
 
+      #correlacao = retornos[ticker2].rolling(252).corr(retornos[ticker1])*100
+      #correlacao = correlacao.dropna()
+      #'Correlação entre', ticker1_sel, 'e ', ticker2_sel, 'ao longo do tempo'
+      #st.line_chart(correlacao)
+      #correlacao_ultimo_ano = correlacao.tail(1)[0].round(2)
+      #'Correlação nos últimos 12 meses:', correlacao_ultimo_ano, '%'
+    st.success('Pronto!')
 
 st.sidebar.text('Criado por Roberto Martins')
 st.sidebar.text('rraires.dev@gmail.com')
