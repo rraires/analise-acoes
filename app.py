@@ -14,7 +14,7 @@ st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', wi
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
-opcao = st.sidebar.radio("", ('Análise de Quedas / Dia Seguinte', 'Análise do Beta da Carteira', 'Correlação entre Ativos'))
+opcao = st.sidebar.radio("", ('Correlação entre Ativos', 'Análise do Beta da Carteira', 'Análise de Quedas / Dia Seguinte'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
