@@ -10,7 +10,7 @@ import seaborn as sns
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
-st.sidebar.image('http://www.eyesightadvisory.net/images/EQ.png', caption='', width=200, use_column_width=False)
+st.sidebar.image('./EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
