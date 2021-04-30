@@ -6,3 +6,4 @@ yfinance
 investpy
 matplotlib
 seaborn
+cufflinks
