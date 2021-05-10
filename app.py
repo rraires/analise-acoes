@@ -118,7 +118,7 @@ def Correlacao():
         tickers.remove('Indice NASDAQ')
         tickers.append('^IXIC')
       
-      carteira = yf.download(tickers, start="2010-01-01")["Close"]
+      carteira = yf.download(tickers, start="2010-01-01")["Adj Close"]
       carteira = carteira.dropna()
 
       retornos = carteira.pct_change()[1:]
