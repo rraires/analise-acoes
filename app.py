@@ -47,11 +47,11 @@ def Carteira():
 
     # Pegar a ultima cotação dos ativos
     count = 0
-    portifolio['Fechamento'] = ''
+    portifolio['Ult. Fechamento'] = ''
     barra_progresso = st.progress(0)
     total_progress = len(portifolio['Ação'])
     for i in portifolio['Ação']:
-      portifolio['Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+      portifolio['Ult. Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
       count += 1
       barra_progresso.progress(count/total_progress)
 
@@ -60,13 +60,13 @@ def Carteira():
     cov = log_returns.cov()*250             #covariância dos dados
     var_m = log_returns["BOVESPA"].var()*250  #variância do mercado
     portifolio['Qtde'] = pd.to_numeric(portifolio['Qtde'])
-    portifolio['Valor'] = portifolio['Qtde'] * portifolio['Fechamento']
+    portifolio['Valor'] = portifolio['Qtde'] * portifolio['Ult. Fechamento']
     portifolio['%'] = (portifolio['Valor'] / portifolio['Valor'].sum()) 
     cov = cov.drop(cov.tail(1).index)
     cov = cov.reset_index(drop=False)
     portifolio['Beta'] = cov['BOVESPA'] / var_m #Calculo do Beta
     portifolio['Beta Pond'] = portifolio['%']  * portifolio['Beta']
-    portifolio['Fechamento'] = pd.to_numeric(portifolio['Fechamento'])
+    portifolio['Ult. Fechamento'] = pd.to_numeric(portifolio['Ult. Fechamento'])
     portifolio['Valor'] = pd.to_numeric(portifolio['Valor'])
     portifolio['%'] = pd.to_numeric(portifolio['%'])
     portifolio['Beta Pond'] = pd.to_numeric(portifolio['Beta Pond'])
@@ -89,7 +89,7 @@ def Carteira():
         retornos.columns = retornos.columns.str.replace(string_a, string_b)
       count += 1
 
-    portifolio = portifolio.style.format({"Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
+    portifolio = portifolio.style.format({"Ult. Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
 
     '**Carteira**'
     st.table(portifolio)
