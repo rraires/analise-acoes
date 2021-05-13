@@ -225,17 +225,18 @@ def Quedas():
     dados_df['% Queda'] = dia_queda['Retorno'].values.round(2) # Coluna com a % de queda
     dados_df['% Abert. Seguinte'] = (((dia_seguinte['Open'].values - dia_queda['Close'].values) / dia_queda['Close'].values)).round(2) # Coluna com a % da Abertura do dia seguinte
     dados_df['% Fech. Seguinte'] = dia_seguinte['Retorno'].values.round(2) # Coluna com a % do Fechamento do dia seguinte
-    dados_df['% Var. no dia'] = (((dia_seguinte['Close'] - dia_seguinte['Open']) / dia_seguinte['Open'])).values.round(2) # Coluna com a % Variação do dia seguinte
+    dados_df['% Var. dia Seguinte'] = (((dia_seguinte['Close'] - dia_seguinte['Open']) / dia_seguinte['Open'])).values.round(2) # Coluna com a % Variação do dia seguinte
 
     def _color_red_or_green(val): # Função para o mapa de cores da tabela
       color = 'red' if val < 0 else 'green'
       return 'color: %s' % color
       #return 'background-color: %s' % color
     
-    dados_df = dados_df.style.applymap(_color_red_or_green, subset=['% Queda', '% Abert. Seguinte', '% Fech. Seguinte', '% Var. no dia']).format(
-        {"% Queda": "{:.2%}", "% Abert. Seguinte": "{:.2%}", "% Fech. Seguinte": "{:.2%}", "% Var. no dia": "{:.2%}"}) # Formatar o dataframe com as cores do mapa acima e com a formatação de %
+    dados_df = dados_df.style.applymap(_color_red_or_green, subset=['% Queda', '% Abert. Seguinte', '% Fech. Seguinte', '% Var. dia Seguinte']).format(
+        {"% Queda": "{:.2%}", "% Abert. Seguinte": "{:.2%}", "% Fech. Seguinte": "{:.2%}", "% Var. dia Seguinte": "{:.2%}"}) # Formatar o dataframe com as cores do mapa acima e com a formatação de %
     
-    st.table(dados_df)
+    #st.table(dados_df)
+    st.dataframe(dados_df)
 
 # Função de Analise da Distância do preço com as Médias
 
