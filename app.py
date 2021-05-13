@@ -17,6 +17,7 @@ def Carteira():
 
   '**Ações**'
   papeis = st.multiselect('Selecione as Ações da Carteira', stocks_df)
+  if len(papeis) < 2: st.write("Selecione pelo menos 2 Ativos!")
   qtde_papeis = len(papeis)
  
   '**Quantidade**'
@@ -200,7 +201,7 @@ def Quedas():
   st.title('Análise de quedas e comportamento no dia seguinte')
   
   ticker = st.selectbox('Escolha a Ação (Clique no campo e digite as iniciais do Ticker)', stocks_df)
-  perc_queda = st.number_input('Entre com a % de queda (Ex.: 10 para listar os dias em que a Ação caiu mais do que 10%', min_value = 5, value = 10)
+  perc_queda = st.number_input('Entre com a % de queda (Ex.: 10 para listar os dias em que a Ação caiu mais do que 10%', min_value = 2, value = 10)
   pressed_calc = st.button('Listar')
 
 
@@ -323,7 +324,7 @@ def Retornos_mensais():
     tabela_descricao = tabela_descricao.transpose()
     tabela_rank_meses['Media'] = tabela_descricao['mean']
     fig = tabela_rank_meses.iplot(asFigure=True, xTitle='Meses', yTitle='Ranking', dimensions=(1000, 600), title='Ranking dos meses por ano - ' + ticker )
-    st.write('Gráfico - Rankings dos meses (Classificação dos meses do menor para o maior rendimento naquele ano')
+    st.write('Gráfico - Rankings dos meses (Classificação dos meses do menor para o maior rendimento naquele ano) - Clique 2x no item da Legenda para selecionar')
     st.plotly_chart(fig)
 
 ########################################### Inicio do Código ##############################################
@@ -331,7 +332,7 @@ def Retornos_mensais():
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
-st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
+#st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
@@ -360,6 +361,6 @@ if opcao == 'Análise de Distância das Médias':
 if opcao == 'Análise de Retornos Mensais': 
   Retornos_mensais()
 
-
+st.sidebar.text('______________________________________')
 st.sidebar.text('Criado por Roberto Martins')
 st.sidebar.text('rraires.dev@gmail.com')
