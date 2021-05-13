@@ -9,6 +9,7 @@ import seaborn as sns
 import cufflinks as cf
 import datetime
 from datetime import date
+import math
 
 # Função de Análise de Carteira
 def Carteira():
@@ -25,9 +26,9 @@ def Carteira():
     lotes = lotes.split(',')
     qtde_lotes = len(lotes)
     if qtde_papeis == qtde_lotes:
-      portfolio = pd.DataFrame()
-      portfolio['Ação'] = papeis
-      portfolio['Qtde'] = lotes
+      portifolio = pd.DataFrame()
+      portifolio['Ação'] = papeis
+      portifolio['Qtde'] = lotes
     else:
       st.write('Quantidade diferente de Papéis e de Lotes. Verifique a lista')
 
@@ -40,17 +41,17 @@ def Carteira():
         tickers[count] = item
         count += 1
 
-    carteira = yf.download(tickers, start="2020-02-06", end="2021-02-12")["Adj Close"]
-    bovespa = yf.download('^BVSP', start="2020-02-06", end="2021-02-12")["Adj Close"]
+    carteira = yf.download(tickers, start="2020-05-01", end="2021-05-30")["Adj Close"]
+    bovespa = yf.download('^BVSP', start="2020-05-01", end="2021-05-30")["Adj Close"]
     carteira['BOVESPA'] = bovespa
 
     # Pegar a ultima cotação dos ativos
     count = 0
-    portfolio['Fechamento'] = ''
+    portifolio['Fechamento'] = ''
     barra_progresso = st.progress(0)
-    total_progress = len(portfolio['Ação'])
-    for i in portfolio['Ação']:
-      portfolio['Fechamento'][count] = inv.get_stock_information(i, country='brazil')['Prev. Close'][0]
+    total_progress = len(portifolio['Ação'])
+    for i in portifolio['Ação']:
+      portifolio['Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
       count += 1
       barra_progresso.progress(count/total_progress)
 
@@ -58,28 +59,55 @@ def Carteira():
     log_returns = np.log(carteira/carteira.shift(1))
     cov = log_returns.cov()*250             #covariância dos dados
     var_m = log_returns["BOVESPA"].var()*250  #variância do mercado
-    portfolio['Qtde'] = pd.to_numeric(portfolio['Qtde'])
-    portfolio['Valor'] = portfolio['Qtde'] * portfolio['Fechamento']
-    portfolio['%'] = (portfolio['Valor'] / portfolio['Valor'].sum()) 
+    portifolio['Qtde'] = pd.to_numeric(portifolio['Qtde'])
+    portifolio['Valor'] = portifolio['Qtde'] * portifolio['Fechamento']
+    portifolio['%'] = (portifolio['Valor'] / portifolio['Valor'].sum()) 
     cov = cov.drop(cov.tail(1).index)
     cov = cov.reset_index(drop=False)
-    portfolio['Beta'] = cov['BOVESPA'] / var_m #Calculo do Beta
-    portfolio['Beta Pond'] = portfolio['%']  * portfolio['Beta']
-    portfolio['Fechamento'] = pd.to_numeric(portfolio['Fechamento'])
-    portfolio['Valor'] = pd.to_numeric(portfolio['Valor'])
-    portfolio['%'] = pd.to_numeric(portfolio['%'])
-    portfolio['Beta Pond'] = pd.to_numeric(portfolio['Beta Pond'])
-    beta_portfolio = portfolio['Beta Pond'].sum().round(2)
+    portifolio['Beta'] = cov['BOVESPA'] / var_m #Calculo do Beta
+    portifolio['Beta Pond'] = portifolio['%']  * portifolio['Beta']
+    portifolio['Fechamento'] = pd.to_numeric(portifolio['Fechamento'])
+    portifolio['Valor'] = pd.to_numeric(portifolio['Valor'])
+    portifolio['%'] = pd.to_numeric(portifolio['%'])
+    portifolio['Beta Pond'] = pd.to_numeric(portifolio['Beta Pond'])
+    beta_portifolio = portifolio['Beta Pond'].sum().round(2)
+    valor_portifolio = portifolio['Valor'].sum() # Obtem o valor total da Carteira
+    preco_bova11 = inv.get_etf_recent_data('Ishares Ibovespa', country='brazil').tail(1)['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+    preco_winfut = inv.get_index_recent_data('Bovespa', country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+    qtde_bova11 = (valor_portifolio / preco_bova11) * beta_portifolio # Qtde de lotes de BOVA11 para fazer Hedge
+    qtde_winfut = valor_portifolio / (preco_winfut * 0.20) * beta_portifolio # Qtde de contratos WINFUT para Hedge
+    qtde_bova11 = int(math.ceil(qtde_bova11)) #Arredondar para cima e tirar o "."
+    qtde_winfut = int(math.ceil(qtde_winfut)) #Arredondar para cima e tirar o "."
 
-    portfolio = portfolio.style.format({"Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
+    #Calculo da Correlação dos ativos da Carteira
+    retornos = carteira.pct_change()[1:]
+    count = 0
+    for item in retornos.columns:
+      if 'BOVESPA' not in item: 
+        string_a = retornos.columns[count]
+        string_b = string_a[:-3]
+        retornos.columns = retornos.columns.str.replace(string_a, string_b)
+      count += 1
 
-    '**Portfolio**'
-    st.table(portfolio)
+    portifolio = portifolio.style.format({"Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
+
+    '**Carteira**'
+    st.table(portifolio)
     ''
-    '**Beta da Carteira:**', beta_portfolio
+    '**Total Carteira: **', 'R${:20,.2f}'.format(valor_portifolio)
+    '**Beta da Carteira: **', beta_portifolio
+    '**Quantidade de Contratos WINFUT para Hedge: **', qtde_winfut
+    '**Quantidade de lotes BOVA11 para Hegde: **', qtde_bova11
+    '** **'
+    '**Correlação dos Ativos da Carteira**'
+    sns.heatmap(retornos.tail(255).corr(), annot=True); # HeatMap da correlação entre os Ativos do periodo de 1 ano
+    st.pyplot()
+
 
 
 # Função de Calculo de Correlação
+
+
 
 def Correlacao():
   st.title('Correlação entre Ativos')
@@ -285,20 +313,29 @@ def Retornos_mensais():
       #return 'color: %s' % color
       return 'background-color: %s' % color
     #Aplicar a formatação
-    tabela_retornos = tabela_retornos.style.applymap(_color_red_or_green).format("{:.2%}")
-    st.table(tabela_retornos)
+    tabela_retornos_colorida = tabela_retornos.style.applymap(_color_red_or_green).format("{:.2%}")
+    st.write('Tabela dos Retornos Mensais')
+    st.table(tabela_retornos_colorida)
+    #Gráfico de Ranking dos Meses
+    tabela_rank_anos = tabela_retornos.rank(axis=1)
+    tabela_rank_meses = tabela_rank_anos.transpose()
+    tabela_descricao = tabela_rank_anos.describe()
+    tabela_descricao = tabela_descricao.transpose()
+    tabela_rank_meses['Media'] = tabela_descricao['mean']
+    fig = tabela_rank_meses.iplot(asFigure=True, xTitle='Meses', yTitle='Ranking', dimensions=(1000, 600), title='Ranking dos meses por ano - ' + ticker )
+    st.write('Gráfico - Rankings dos meses (Classificação dos meses do menor para o maior rendimento naquele ano')
+    st.plotly_chart(fig)
 
-
-######### Inicio do Código ##########
+########################################### Inicio do Código ##############################################
 
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
-st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
+#st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
-opcao = st.sidebar.radio("", ('Correlação entre Ativos', 'Análise do Beta da Carteira', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais'))
+opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Correlação entre Ativos', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
