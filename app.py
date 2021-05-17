@@ -91,17 +91,20 @@ def Carteira():
       count += 1
 
     portifolio = portifolio.style.format({"Ult. Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
-
+    
+    # Mostrar Resultados
     '**Carteira**'
     st.table(portifolio)
     ''
     '**Total Carteira: **', 'R${:20,.2f}'.format(valor_portifolio)
     '**Beta da Carteira: **', beta_portifolio
+    '**Preço Winfut: **', 'R${:20,.2f}'.format(preco_winfut * 0.20), '(',preco_winfut, ' pontos)' 
+    '**Preço BOVA11: **', 'R${:20,.2f}'.format(preco_bova11)
     '**Quantidade de Contratos WINFUT para Hedge: **', qtde_winfut
     '**Quantidade de lotes BOVA11 para Hegde: **', qtde_bova11
     '** **'
-    '**Correlação dos Ativos da Carteira**'
-    sns.heatmap(retornos.tail(255).corr(), annot=True); # HeatMap da correlação entre os Ativos do periodo de 1 ano
+    sns.heatmap(retornos.tail(255).corr(), annot=True, annot_kws={"size": 8}); # HeatMap da correlação entre os Ativos do periodo de 1 ano
+    plt.title('Correlação entre os Ativos', fontsize = 8) # title with fontsize
     st.pyplot()
 
 
