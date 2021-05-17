@@ -334,8 +334,8 @@ def Op_Calc_Prob():
   st.title('Opções - Calculadora de Probabilidade')
   ticker = st.selectbox('Escolha a Ação (Clique no campo e digite as iniciais do Ticker)', stocks_df)
   stock_price = inv.get_stock_recent_data(ticker, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
-  st.write('Preço do Ativo: ', stock_price)
-  #stock_price = st.number_input('Preço do Ativo')
+  #st.write('Preço do Ativo: ', stock_price)
+  stock_price = st.number_input('Preço do Ativo (Preço com 15 min de atraso. Atualize com o preço atual)', stock_price)
   target_price = st.number_input('Preço Alvo')
   days_remain = st.number_input('Dias para o vencimento', min_value=1, value=20 )
   volatility = st.number_input('Volatilidade Anual. Ex 25 = 25%', min_value=1.00, max_value=100.00, value=25.00)
