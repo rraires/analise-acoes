@@ -336,7 +336,7 @@ def Op_Calc_Prob():
   stock_price = inv.get_stock_recent_data(ticker, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
   st.write('Preço do Ativo: ', stock_price)
   #stock_price = st.number_input('Preço do Ativo')
-  target_price = st.number_input('Preço Alvo', value=stock_price)
+  target_price = st.number_input('Preço Alvo')
   days_remain = st.number_input('Dias para o vencimento', min_value=1, value=20 )
   volatility = st.number_input('Volatilidade Anual. Ex 25 = 25%', min_value=1, max_value=100, value=25)
 
