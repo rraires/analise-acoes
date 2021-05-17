@@ -328,6 +328,48 @@ def Retornos_mensais():
     st.write('Gráfico - Rankings dos meses (Classificação dos meses do menor para o maior rendimento naquele ano) - Clique 2x no item da Legenda para selecionar')
     st.plotly_chart(fig)
 
+
+# Função de Opções - Calculo de Probabilidade
+def Op_Calc_Prob():
+  st.title('Opções - Calculadora de Probabilidade')
+  ticker = st.selectbox('Escolha a Ação (Clique no campo e digite as iniciais do Ticker)', stocks_df)
+  stock_price = inv.get_stock_recent_data(ticker, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+  st.write('Preço do Ativo: ', stock_price)
+  #stock_price = st.number_input('Preço do Ativo')
+  target_price = st.number_input('Preço Alvo', value=stock_price)
+  days_remain = st.number_input('Dias para o vencimento', min_value=1, value=20 )
+  volatility = st.number_input('Volatilidade Anual. Ex 25 = 25%', min_value=1, max_value=100, value=25)
+
+  if st.button('Calcular'):
+
+    days_remain /= 365
+    volatility /= 100
+
+    vt = volatility*math.sqrt(days_remain)
+    lnpq = math.log(target_price/stock_price)
+    d1 = lnpq/vt
+
+    y=math.floor(1/(1+.2316419*abs(d1))*100000)/100000
+    z=math.floor(.3989423*math.exp(-((d1*d1)/2))*100000)/100000
+    y5=1.330274*math.pow(y,5)
+    y4=1.821256*math.pow(y,4)
+    y3=1.781478*math.pow(y,3)
+    y2=.356538*math.pow(y,2)
+    y1=.3193815*y
+    x=1-z*(y5-y4+y3-y2+y1)
+    x=math.floor(x*100000)/100000
+
+    if (d1<0):
+      x=1-x
+
+    pbelow=math.floor(x*1000)/10
+    pabove=math.floor((1-x)*1000)/10
+
+    st.write('Probabilidade do Ativo estar acima do preço alvo:', pabove, '%')
+    st.write('Probabilidade do Ativo estar abaixo do preço alvo:', pbelow, '%')
+
+
+
 ########################################### Inicio do Código ##############################################
 
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
@@ -337,7 +379,7 @@ st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
-opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Correlação entre Ativos', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais'))
+opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Correlação entre Ativos', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais', 'Opções - Calculadora de Probabilidade'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
@@ -361,6 +403,9 @@ if opcao == 'Análise de Distância das Médias':
 
 if opcao == 'Análise de Retornos Mensais': 
   Retornos_mensais()
+
+if opcao == 'Opções - Calculadora de Probabilidade': 
+  Op_Calc_Prob()
 
 st.sidebar.text('______________________________________')
 st.sidebar.text('Criado por Roberto Martins')
