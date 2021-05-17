@@ -338,7 +338,7 @@ def Op_Calc_Prob():
   #stock_price = st.number_input('Preço do Ativo')
   target_price = st.number_input('Preço Alvo')
   days_remain = st.number_input('Dias para o vencimento', min_value=1, value=20 )
-  volatility = st.number_input('Volatilidade Anual. Ex 25 = 25%', min_value=1, max_value=100, value=25)
+  volatility = st.number_input('Volatilidade Anual. Ex 25 = 25%', min_value=1.00, max_value=100.00, value=25.00)
 
   if st.button('Calcular'):
 
