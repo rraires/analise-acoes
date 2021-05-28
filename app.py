@@ -22,6 +22,16 @@ def Carteira():
  
   '**Quantidade**'
   lotes = st.text_input('Digite a quantidade de cada ativo, separando com "," (vírgula) e na mesma sequência (Ex.: 200,500,300 ...)')
+
+  '**Período de histórico para o Cálculo**'
+  periodo=st.radio('', ('Últimos 3 meses','Últimos 6 meses','Último ano'))
+
+  if periodo=='Últimos 3 meses':
+    periodo='3mo'
+  elif periodo=='Últimos 6 meses':
+    periodo='6mo'
+  else:
+    periodo='1y'
   
   if st.button('Calcular'):
     lotes = lotes.split(',')
@@ -33,6 +43,8 @@ def Carteira():
     else:
       st.write('Quantidade diferente de Papéis e de Lotes. Verifique a lista')
 
+    portifolio = portifolio.sort_values('Ação').reset_index(drop=True) #Colocar em ordem alfabetica o dataframe
+    
     # Ler os Tickers da lista e adicionar o '.SA' para usar com o YahooFinance e baixar o histórico
 
     tickers = papeis
@@ -42,9 +54,10 @@ def Carteira():
         tickers[count] = item
         count += 1
 
-    carteira = yf.download(tickers, start="2020-05-01", end="2021-05-30")["Adj Close"]
-    bovespa = yf.download('^BVSP', start="2020-05-01", end="2021-05-30")["Adj Close"]
+    carteira = yf.download(tickers, period=periodo)["Adj Close"]
+    bovespa = yf.download('^BVSP', period=periodo)["Adj Close"]
     carteira['BOVESPA'] = bovespa
+    carteira = carteira.fillna(method='bfill')
 
     # Pegar a ultima cotação dos ativos
     count = 0
@@ -378,7 +391,7 @@ def Op_Calc_Prob():
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
-st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
+#st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
