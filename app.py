@@ -65,7 +65,8 @@ def Carteira():
     barra_progresso = st.progress(0)
     total_progress = len(portifolio['Ação'])
     for i in portifolio['Ação']:
-      portifolio['Ult. Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+      #portifolio['Ult. Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+      portifolio['Ult. Fechamento'][count] = yf.download(i + '.SA',period='1d')['Adj Close'][0] #Pegar o ultimo preço de fechamento da lista
       count += 1
       barra_progresso.progress(count/total_progress)
 
@@ -391,7 +392,7 @@ def Op_Calc_Prob():
 st.set_option('deprecation.showPyplotGlobalUse', False) # Desabilitar os Warnigs sobre o Pyplot
 st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial_sidebar_state = 'auto') # Configurar Pagina
 
-st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
+#st.sidebar.image('EQ.png', caption='', width=200, use_column_width=False)
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
@@ -399,6 +400,8 @@ opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Correlação entr
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
+stocks_list.remove('NATU3')
+stocks_list.append('NTCO3')
 stocks_df = pd.DataFrame(stocks_list) #Transforma a lista em DataFrame
 stocks_df.columns = ['Ticker'] #Adiciona o nome da coluna
 indices = [{'Ticker': 'Indice Bovespa'}, {'Ticker': 'Indice Dolar'},{'Ticker': 'Indice SP500'}, {'Ticker': 'Indice Dow Jones'}, {'Ticker': 'Indice NASDAQ'}]
