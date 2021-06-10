@@ -5,6 +5,7 @@ import yfinance as yf
 import investpy as inv
 import time
 import matplotlib.pyplot as plt
+import plotly.express as px
 import seaborn as sns
 import cufflinks as cf
 import datetime
@@ -385,6 +386,92 @@ def Op_Calc_Prob():
     st.write('Probabilidade do Ativo estar acima do preço alvo:', pabove, '%')
     st.write('Probabilidade do Ativo estar abaixo do preço alvo:', pbelow, '%')
 
+# Função de análise Setoria da Carteira
+
+def Setorial():
+  st.title('Análise de Setores')
+
+  '**Ações**'
+  papeis = st.multiselect('Selecione as Ações da Carteira', stocks_df)
+  if len(papeis) < 2: st.write("Selecione pelo menos 2 Ativos!")
+  qtde_papeis = len(papeis)
+  
+  '**Quantidade**'
+  lotes = st.text_input('Digite a quantidade de cada ativo, separando com "," (vírgula) e na mesma sequência (Ex.: 200,500,300 ...)')
+    
+  if st.button('Calcular'):
+    lotes = lotes.split(',')
+    qtde_lotes = len(lotes)
+    if qtde_papeis == qtde_lotes:
+      portifolio = pd.DataFrame()
+      portifolio['Ação'] = papeis
+      portifolio['Qtde'] = lotes
+    else:
+      st.write('Quantidade diferente de Papéis e de Lotes. Verifique a lista')
+
+    portifolio = portifolio.sort_values('Ação').reset_index(drop=True) #Colocar em ordem alfabetica o dataframe
+        
+    # Ler os Tickers da lista e adicionar o '.SA' para usar com o YahooFinance e baixar o histórico
+
+    tickers = papeis
+    count = 0
+    for item in tickers:
+      item = item + '.SA'
+      tickers[count] = item
+      count += 1
+
+    carteira = yf.download(tickers, period='1y')["Adj Close"]
+    bovespa = yf.download('^BVSP', period='1y')["Adj Close"]
+    carteira['BOVESPA'] = bovespa
+    carteira = carteira.fillna(method='bfill')
+
+    # Pegar a ultima cotação dos ativos
+    count = 0
+    portifolio['Ult. Fechamento'] = ''
+    barra_progresso = st.progress(0)
+    total_progress = len(portifolio['Ação'])
+    for i in portifolio['Ação']:
+      #portifolio['Ult. Fechamento'][count] = inv.get_stock_recent_data(i, country='brazil')['Close'][-1] #Pegar o ultimo preço de fechamento da lista
+      portifolio['Ult. Fechamento'][count] = yf.download(i + '.SA',period='1d')['Adj Close'][0] #Pegar o ultimo preço de fechamento da lista
+      count += 1
+      barra_progresso.progress(count/total_progress)
+
+
+    portifolio['Qtde'] = pd.to_numeric(portifolio['Qtde'])
+    portifolio['Valor'] = portifolio['Qtde'] * portifolio['Ult. Fechamento']
+    portifolio['%'] = (portifolio['Valor'] / portifolio['Valor'].sum()) 
+    portifolio['Ult. Fechamento'] = pd.to_numeric(portifolio['Ult. Fechamento'])
+    portifolio['Valor'] = pd.to_numeric(portifolio['Valor'])
+    portifolio['%'] = pd.to_numeric(portifolio['%'])
+    portifolio['Setor'] = ''
+    portifolio['SubSetor'] = ''
+    count = 0
+    for ativo in portifolio['Ação']:
+      ativo = yf.Ticker(ativo + '.SA')
+      portifolio['Setor'][count] = ativo.info['sector']
+      portifolio['SubSetor'][count] = ativo.info['industry']
+      count +=1
+
+    #portifolio = portifolio.style.format({"Ult. Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"})
+    st.table(portifolio.style.format({"Ult. Fechamento": "R${:20,.2f}", "Valor": "R${:20,.2f}", "%": "{:.0%}", "Beta": "{:.2}", "Beta Pond": "{:.2}"}))
+
+    '** Análise Setorial **'
+
+    fig = px.sunburst(portifolio, path=['Setor', 'SubSetor', 'Ação'], values='%', height=900)
+    fig.update_traces(textfont_color='white',
+                    textfont_size=14,
+                    hovertemplate='<b>%{label}:</b> %{value:.2f}%')
+    #fig.show()
+    st.plotly_chart(fig)
+
+    correlacao = carteira.corr()
+
+    #plt.figure(figsize=(16, 6))
+    # define the mask to set the values in the upper triangle to True
+    mask = np.triu(np.ones_like(correlacao, dtype=np.bool))
+    heatmap = sns.heatmap(correlacao, mask=mask, vmin=-1, vmax=1, annot=True, cmap='BrBG')
+    heatmap.set_title('Correlação entre os Ativos', fontdict={'fontsize':18}, pad=16);
+    st.pyplot()
 
 
 ########################################### Inicio do Código ##############################################
@@ -396,7 +483,7 @@ st.set_page_config(page_title='Análise Quant Ações', layout = 'wide', initial
 st.sidebar.header('App para análise de Ações')
 st.sidebar.subheader('Escolha a opção para análise:')
 
-opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Correlação entre Ativos', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais', 'Opções - Calculadora de Probabilidade'))
+opcao = st.sidebar.radio("", ('Análise do Beta da Carteira', 'Análise Setorial', 'Correlação entre Ativos', 'Análise de Quedas / Dia Seguinte', 'Análise de Distância das Médias', 'Análise de Retornos Mensais', 'Opções - Calculadora de Probabilidade'))
 
 
 stocks_list = inv.get_stocks_list(country='Brazil') #Pegar a lista das Ações Brasileiras
@@ -410,6 +497,9 @@ stocks_df = stocks_df.sort_values(by='Ticker').reset_index(drop=True) #Ordena po
 
 if opcao == 'Análise do Beta da Carteira':
   Carteira()
+
+if opcao == 'Análise Setorial':
+  Setorial()
 
 if opcao == 'Análise de Quedas / Dia Seguinte':
   Quedas()
