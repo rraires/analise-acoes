@@ -1,3 +1,3 @@
 import streamlit as st
-st.title('Analise Quant em Manutenção para novas atualizações')
-st.header('Disponível em Breve!')
+st.title('Acesse a nova versão do site AnaliseQuant')
+st.write("[www.analisequant.com](http://www.analisequant.com)")
